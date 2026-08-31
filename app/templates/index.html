@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}الرئيسية | FastAPI & PostgreSQL Portal{% endblock %}
+
+{% block content %}
+<!-- Guest Hero View (shown by default or when not logged in) -->
+<div id="guest-view" style="display: block;">
+  <section class="hero">
+    <div class="hero-badge">
+      <span>🚀</span>
+      <span>FastAPI + PostgreSQL + JWT Authentication</span>
+    </div>
+    
+    <h1 class="hero-title">
+      بوابة المصادقة وإدارة المستخدمين <br>
+      <span class="gradient-text">سريعة، آمنة، ومتكاملة</span>
+    </h1>
+
+    <p class="hero-description">
+      نظام متكامل مبني باستخدام أحدث تقنيات الويب. يوفر واجهات برمجية RESTful APIs لتسجيل الحسابات وتسجيل الدخول المشفر بواسطة JWT، مع لوحة بيانات محمية بالكامل.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/register" class="btn btn-glow" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+        <span>✨ ابدأ بإنشاء حساب</span>
+      </a>
+      <a href="/login" class="btn btn-secondary" style="padding: 0.85rem 2rem; font-size: 1.05rem;">
+        <span>تسجيل الدخول</span>
+      </a>
+      <a href="/docs" target="_blank" class="btn btn-secondary" style="padding: 0.85rem 1.5rem;">
+        <span>📖 توثيق الـ APIs (Swagger)</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3 class="feature-title">أداء فائق مع FastAPI</h3>
+      <p class="feature-desc">
+        استجابة سريعة للغاية وغير متزامنة (Asynchronous) مع توثيق تفاعلي فوري لجميع نقاط الـ API عبر Swagger UI.
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3 class="feature-title">أمان عالي و JWT Tokens</h3>
+      <p class="feature-desc">
+        تشفير كلمات المرور باستخدام خوارزمية Bcrypt مع توليد Bearer Access Tokens لضمان حماية المسارات والبيانات.
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🐘</div>
+      <h3 class="feature-title">قاعدة بيانات PostgreSQL</h3>
+      <p class="feature-desc">
+        تخزين وإدارة قوية ومنظمة لبيانات المستخدمين عبر SQLAlchemy ORM مع فحص التكرار وصحة البيانات.
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- Authenticated Dashboard View (shown when user is logged in) -->
+<div id="auth-dashboard-view" style="display: none;">
+  <section class="glass-card profile-card">
+    <div class="profile-header">
+      <div class="user-info-group">
+        <div class="user-avatar" id="user-avatar-initials">U</div>
+        <div class="user-details">
+          <h3 id="profile-fullname">جاري التحميل...</h3>
+          <p id="profile-email">email@example.com</p>
+        </div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span class="status-badge">
+          <span class="status-dot"></span>
+          <span>حساب نشط</span>
+        </span>
+        <button onclick="logout()" class="btn btn-danger" style="padding: 0.45rem 1rem; font-size: 0.85rem;">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <h4 style="font-size: 1.1rem; color: #cbd5e1; margin-bottom: 0.5rem;" id="api-welcome-message">
+        مرحباً بك في لوحة التحكم الخاصة بك
+      </h4>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        تم جلب هذه البيانات بنجاح من الـ API المحمي (<code style="color: var(--secondary);">GET /api/home/me</code>) باستخدام توكن الـ JWT الخاص بك.
+      </p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">اسم المستخدم (Username)</div>
+        <div class="stat-value" id="profile-username">--</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label">معرف المستخدم (User ID)</div>
+        <div class="stat-value" id="profile-id">#--</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label">تاريخ التسجيل</div>
+        <div class="stat-value" id="profile-joined">--</div>
+      </div>
+    </div>
+
+    <!-- API Response Inspector -->
+    <div style="margin-top: 2rem; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); padding: 1rem; border: 1px solid var(--border-glass);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700;">📡 استجابة API المحمي (Protected API Payload):</span>
+        <a href="/docs" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">تصفح Swagger Docs</a>
+      </div>
+      <pre id="api-json-data" style="direction: ltr; text-align: left; font-family: monospace; font-size: 0.85rem; color: #38bdf8; overflow-x: auto; background: transparent; margin: 0;">جاري التحميل...</pre>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  if (isAuthenticated()) {
+    document.getElementById('guest-view').style.display = 'none';
+    document.getElementById('auth-dashboard-view').style.display = 'block';
+    
+    try {
+      // Call Protected Home API (API 3)
+      const data = await apiRequest('/api/home/me');
+      
+      const user = data.user;
+      const displayName = user.full_name || user.username;
+      
+      document.getElementById('profile-fullname').textContent = displayName;
+      document.getElementById('profile-email').textContent = user.email;
+      document.getElementById('profile-username').textContent = user.username;
+      document.getElementById('profile-id').textContent = '#' + user.id;
+      document.getElementById('api-welcome-message').textContent = data.message;
+      
+      // Initials for avatar
+      const initials = displayName.trim().charAt(0).toUpperCase();
+      document.getElementById('user-avatar-initials').textContent = initials;
+      
+      // Format registration date
+      if (user.created_at) {
+        const date = new Date(user.created_at);
+        document.getElementById('profile-joined').textContent = date.toLocaleDateString('ar-EG', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+
+      // Display Raw JSON
+      document.getElementById('api-json-data').textContent = JSON.stringify(data, null, 2);
+
+    } catch (err) {
+      console.error('Session expired or error fetching home data:', err);
+      logout();
+    }
+  } else {
+    document.getElementById('guest-view').style.display = 'block';
+    document.getElementById('auth-dashboard-view').style.display = 'none';
+  }
+});
+</script>
+{% endblock %}
