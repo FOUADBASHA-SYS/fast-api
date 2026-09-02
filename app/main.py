@@ -1,12 +1,10 @@
-import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth_router, home_router, pages_router
+from app.routers import auth_router, home_router
 # Ensure models are imported so Base metadata knows all tables
 import app.models.user
 
@@ -19,13 +17,13 @@ async def lifespan(app: FastAPI):
         print(">> Database tables initialized successfully.")
     except Exception as e:
         print(f">> Notice: Could not automatically connect/create tables: {e}")
-        print(">> Ensure PostgreSQL is running and DATABASE_URL is configured in .env")
+        print(">> Ensure your database is running and DATABASE_URL is configured in .env")
     yield
 
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Full-stack FastAPI + PostgreSQL Authentication Backend with Home, Login, and Registration pages.",
+    description="High-Performance REST API Backend with JWT Authentication and PostgreSQL/SQLite Database.",
     version=settings.APP_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
@@ -41,18 +39,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Static Files
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-if os.path.exists(STATIC_DIR):
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-
 # Include Routers
 app.include_router(auth_router)
 app.include_router(home_router)
-app.include_router(pages_router)
 
 
-@app.get("/api/health", tags=["Health"])
+@app.get("/", tags=["General"], summary="API Root Overview")
+def root():
+    return {
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "online",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "endpoints": {
+            "register": "POST /api/auth/register",
+            "login": "POST /api/auth/login",
+            "profile": "GET /api/home/me",
+            "health": "GET /api/health"
+        }
+    }
+
+
+@app.get("/api/health", tags=["General"], summary="Health Check")
 def health_check():
     return {
         "status": "healthy",

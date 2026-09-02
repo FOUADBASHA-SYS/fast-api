@@ -1,5 +1,5 @@
 """
-End-to-End API and Page Verification Test
+End-to-End REST API Backend Verification Test
 """
 import os
 import sys
@@ -43,30 +43,27 @@ client = TestClient(app)
 
 
 def test_full_flow():
-    print(">> [1/6] Testing Health Check Endpoint...")
+    print(">> [1/6] Testing Root & Health Check Endpoints...")
+    root_resp = client.get("/")
+    assert root_resp.status_code == 200
+    assert root_resp.json()["status"] == "online"
+    assert "endpoints" in root_resp.json()
+    print("   [OK] Root endpoint '/' returned API overview JSON.")
+
     health_resp = client.get("/api/health")
     assert health_resp.status_code == 200
     assert health_resp.json()["status"] == "healthy"
-    print("   [OK] Health Check passed:", health_resp.json())
+    print("   [OK] Health check passed:", health_resp.json())
 
-    print("\n>> [2/6] Testing Web Pages (HTML Rendering)...")
-    # Test Home page
-    home_page = client.get("/")
-    assert home_page.status_code == 200
-    assert "FastAPI" in home_page.text
-    print("   [OK] Home Page ('/') rendered successfully.")
-
-    # Test Login page
-    login_page = client.get("/login")
-    assert login_page.status_code == 200
-    assert "تسجيل الدخول" in login_page.text
-    print("   [OK] Login Page ('/login') rendered successfully.")
-
-    # Test Register page
-    register_page = client.get("/register")
-    assert register_page.status_code == 200
-    assert "إنشاء حساب جديد" in register_page.text
-    print("   [OK] Register Page ('/register') rendered successfully.")
+    print("\n>> [2/6] Testing Swagger UI & OpenAPI Specification...")
+    docs_resp = client.get("/docs")
+    assert docs_resp.status_code == 200
+    openapi_resp = client.get("/openapi.json")
+    assert openapi_resp.status_code == 200
+    assert "/api/auth/register" in openapi_resp.json()["paths"]
+    assert "/api/auth/login" in openapi_resp.json()["paths"]
+    assert "/api/home/me" in openapi_resp.json()["paths"]
+    print("   [OK] Swagger UI & OpenAPI schema generated successfully.")
 
     print("\n>> [3/6] Testing API 1: User Registration (POST /api/auth/register)...")
     user_payload = {
@@ -116,7 +113,7 @@ def test_full_flow():
     assert bad_login.status_code == 401
     print("   [OK] Invalid credentials properly rejected (401 Unauthorized).")
 
-    print("\n>> [5/6] Testing API 3: Protected Home/Me API (GET /api/home/me)...")
+    print("\n>> [5/6] Testing API 3: Protected User Profile (GET /api/home/me)...")
     # Request without token -> should fail with 401
     unauth_resp = client.get("/api/home/me")
     assert unauth_resp.status_code == 401
@@ -130,11 +127,11 @@ def test_full_flow():
     assert me_data["status"] == "authenticated"
     assert me_data["user"]["username"] == "fouad_dev"
     assert me_data["user"]["full_name"] == "Fouad Engineer"
-    print("   [OK] API 3 Protected Home Data retrieved successfully:")
+    print("   [OK] API 3 Protected User Data retrieved successfully:")
     print("       Message:", me_data["message"])
     print("       User Details:", me_data["user"])
 
-    print("\n>> [6/6] All 6 test suites passed with 100% success! 🎉")
+    print("\n>> [6/6] All backend REST API test suites passed with 100% success! 🎉")
 
 
 if __name__ == "__main__":
