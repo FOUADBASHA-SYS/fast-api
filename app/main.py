@@ -4,7 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import auth_router, home_router
+from app.routers import (
+    auth_router,
+    home_router,
+    dashboard_router,
+    agents_router,
+    alerts_router,
+    threats_router,
+    reports_router,
+    settings_router
+)
 # Ensure models are imported so Base metadata knows all tables
 import app.models.user
 
@@ -14,16 +23,16 @@ async def lifespan(app: FastAPI):
     # Initialize database tables on startup
     try:
         Base.metadata.create_all(bind=engine)
-        print(">> Database tables initialized successfully.")
+        print(">> [XDR Backend] Database tables initialized successfully.")
     except Exception as e:
-        print(f">> Notice: Could not automatically connect/create tables: {e}")
+        print(f">> [XDR Backend] Notice: Could not automatically connect/create tables: {e}")
         print(">> Ensure your database is running and DATABASE_URL is configured in .env")
     yield
 
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="High-Performance REST API Backend with JWT Authentication and PostgreSQL/SQLite Database.",
+    description="Enterprise XDR Security Platform Backend for El Shorouk Academy Graduation Project. Features JWT Authentication, Live Wazuh SIEM/EDR Integration, MITRE ATT&CK Telemetry, and Threat Intelligence.",
     version=settings.APP_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
@@ -33,7 +42,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS if hasattr(settings, "CORS_ORIGINS") else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,6 +51,12 @@ app.add_middleware(
 # Include Routers
 app.include_router(auth_router)
 app.include_router(home_router)
+app.include_router(dashboard_router)
+app.include_router(agents_router)
+app.include_router(alerts_router)
+app.include_router(threats_router)
+app.include_router(reports_router)
+app.include_router(settings_router)
 
 
 @app.get("/", tags=["General"], summary="API Root Overview")
@@ -50,12 +65,24 @@ def root():
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "online",
+        "academy": "El Shorouk Academy",
+        "project": "XDR Security Platform Graduation Project",
         "docs": "/docs",
         "redoc": "/redoc",
         "endpoints": {
-            "register": "POST /api/auth/register",
-            "login": "POST /api/auth/login",
-            "profile": "GET /api/home/me",
+            "auth_register": "POST /api/auth/register",
+            "auth_login": "POST /api/auth/login",
+            "user_profile": "GET /api/home/me",
+            "dashboard_stats": "GET /api/dashboard",
+            "agents_list": "GET /api/agents",
+            "agent_detail": "GET /api/agents/{agent_id}",
+            "alerts_list": "GET /api/alerts",
+            "alert_detail": "GET /api/alerts/{alert_id}",
+            "threat_intelligence": "GET /api/threats",
+            "reports_summary": "GET /api/reports/summary",
+            "reports_export_csv": "GET /api/reports/export/alerts.csv",
+            "settings_diagnostics": "GET /api/settings/diagnostics",
+            "settings_profile": "PUT /api/settings/profile",
             "health": "GET /api/health"
         }
     }
@@ -66,7 +93,8 @@ def health_check():
     return {
         "status": "healthy",
         "app": settings.APP_NAME,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
+        "academy": "El Shorouk Academy"
     }
 
 
